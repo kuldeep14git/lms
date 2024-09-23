@@ -1,0 +1,35 @@
+<div class="student-dashboard">
+  <h2>Your Enrolled Courses</h2>
+  <ul>
+    {% for course in courses %}
+      <li>
+        <h3>{{ course.title }}</h3>
+        <div class="progress-bar">
+          <div 
+            class="progress" 
+            style="width: {{ course.progress_bar }}%; 
+                   background-color: 
+                     {% if course.progress_bar <= 25 %} 
+                       #f44336;  /* Red for 0-25% */
+                     {% elseif course.progress_bar <= 50 %}
+                       #ff9800;  /* Orange for 26-50% */
+                     {% elseif course.progress_bar <= 75 %}
+                       #ffc107;  /* Yellow for 51-75% */
+                     {% else %}
+                       #4caf50;  /* Green for 76-100% */
+                     {% endif %};">
+          </div>
+        </div>
+        <p>{{ course.progress_bar }}% complete</p>
+
+        {% if course.can_generate_certificate %}
+          <a href="{{ path('dlp.certificate_generate', {'nid': course.nid}) }}" class="generate-certificate-btn">
+            Generate Certificate
+          </a>
+        {% endif %}
+      </li>
+    {% else %}
+      <li>No courses enrolled.</li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * @file
+ * Tracks course enrollments.
+ *
+ * Tracks course progress for enrolled courses.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function dlp_install() {
+  // Create the 'course_enrollments' table.
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('course_enrollments')) {
+    $schema->createTable('course_enrollments', [
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'not null' => TRUE,
+          'unsigned' => TRUE,
+        ],
+        'uid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'unsigned' => TRUE,
+        ],
+        'nid' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'unsigned' => TRUE,
+        ],
+        'enrollment_date' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'description' => 'The Unix timestamp of the enrollment date.',
+        ],
+        'progress' => [
+        // Define the field as BLOB.
+          'type' => 'blob',
+          'description' => 'Binary data stored in BLOB format.',
+          'not null' => FALSE,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'uid_nid' => ['uid', 'nid'],
+      ],
+    ]);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function dlp_uninstall() {
+  $schema = \Drupal::database()->schema();
+  if ($schema->tableExists('course_enrollments')) {
+    $schema->dropTable('course_enrollments');
+  }
+}

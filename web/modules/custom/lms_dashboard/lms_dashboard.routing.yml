@@ -1,0 +1,7 @@
+lms_dashboard.user_dashboard:
+  path: '/user/dashboard'
+  defaults:
+    _controller: '\Drupal\lms_dashboard\Controller\UserDashboardController::view'
+    _title: 'User Dashboard'
+  requirements:
+    _permission: 'access content'

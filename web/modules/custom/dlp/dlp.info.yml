@@ -1,0 +1,10 @@
+name: 'DLP Enroll'
+type: module
+description: 'A custom module for enrolling users into courses.'
+core_version_requirement: ^10
+package: Custom
+dependencies:
+  - node
+  - paragraphs
+  - drupal:block
+  - user

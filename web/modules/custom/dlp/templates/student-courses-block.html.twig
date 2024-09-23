@@ -1,0 +1,21 @@
+<div class="student-courses">
+  <h2>Student Courses</h2>
+  <ul>
+    {% for student in students %}
+      <li>
+        <strong>{{ student.name }}</strong>
+        <ul>
+          {% for course in student.courses %}
+            <li>
+              Course Title: {{ course.title }} - Progress: {{ course.progress }}
+            </li>
+          {% else %}
+            <li>No courses enrolled.</li>
+          {% endfor %}
+        </ul>
+      </li>
+    {% else %}
+      <li>No students found.</li>
+    {% endfor %}
+  </ul>
+</div>

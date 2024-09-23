@@ -1,0 +1,14 @@
+# Force consistent LF line endings for all files
+* text=auto
+
+# Handle specific file types
+*.php text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# Prevent binary files from being altered
+*.png binary
+*.jpg binary
+*.gif binary
+*.zip binary

@@ -1,0 +1,33 @@
+dlp.student_login:
+  path: '/student-login'
+  defaults:
+    _controller: '\Drupal\dlp\Controller\StudentLoginController::loginPage'
+    _title: 'Student Login'
+  requirements:
+    _permission: 'access content'
+
+dlp.enroll_course:
+  path: '/enroll/{node}'
+  defaults:
+    _controller: '\Drupal\dlp\Controller\EnrollController::enroll'
+    _title: 'Enroll in Course'
+  requirements:
+    _permission: 'enroll in course'
+    node: \d+
+
+dlp.ajax_progress:
+  path: '/dlp/ajax/progress'
+  defaults:
+    _controller: '\Drupal\dlp\Controller\ProgressController::saveProgress'
+    _title: 'Save Progress'
+  requirements:
+    _permission: 'access content' 
+  methods: [POST]
+
+dlp.certificate_generate:
+  path: '/certificate/generate/{nid}'
+  defaults:
+    _controller: '\Drupal\dlp\Controller\CertificateController::generateCertificate'
+    _title: 'Generate Certificate'
+  requirements:
+    _permission: 'access content'

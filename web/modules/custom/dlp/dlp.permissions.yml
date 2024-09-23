@@ -1,0 +1,4 @@
+enroll in course:
+  title: 'Enroll in course'
+  description: 'Allows users to enroll in courses.'
+  restrict access: true

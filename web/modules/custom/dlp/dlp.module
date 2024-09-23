@@ -1,0 +1,383 @@
+<?php
+
+/**
+ * @file
+ * Class captures database operations.
+ *
+ * Which relates to courses and drupal hooks.
+ */
+
+use Drupal\Core\Database\Database;
+use Drupal\node\Entity\Node;
+use Drupal\user\UserInterface;
+
+/**
+ * Implements hook_user_insert().
+ *
+ * This hook runs when a new user is created.
+ */
+function dlp_user_insert(UserInterface $account) {
+  // Load the "Student" role.
+  $student_role = 'student';
+
+  // Check if the user does not have any roles, then assign the "Student" role.
+  if ($account->isAuthenticated() && !$account->hasRole($student_role)) {
+    $account->addRole($student_role);
+    $account->save();
+  }
+}
+
+/**
+ * Implements hook_user_presave().
+ *
+ * This hook runs before a user is saved to the database.
+ */
+function dlp_user_presave(UserInterface $account) {
+  // Load the "Student" role.
+  $student_role = 'student';
+
+  // Check if the user does not have the "Student" role and is authenticated.
+  if ($account->isNew() && !$account->hasRole($student_role)) {
+    $account->addRole($student_role);
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function dlp_preprocess_node(&$variables) {
+  $node = $variables['node'];
+  $account = \Drupal::currentUser();
+
+  // Check if the node is of type 'lessons'.
+  if ($variables['node']->bundle() == 'lessons') {
+    // Attach the library only for 'lessons' nodes.
+    $variables['#attached']['library'][] = 'dlp/enroll_library';
+  }
+
+  // Check if the user has the 'student' role and is not enrolled in the course.
+  if ($account->hasRole('student') && !dlp_check_course_enrolled($account, $node)) {
+    // Define the fields to hide in paragraphs.
+    $paragraph_fields_to_hide = ['field_description', 'field_image', 'field_video'];
+
+    // Iterate over each field item.
+    if (isset($variables['content']['field_add_lesson'])) {
+      foreach ($variables['content']['field_add_lesson'] as &$paragraph_item) {
+        // Check if the item is a render array.
+        if (is_array($paragraph_item) && isset($paragraph_item['#paragraph'])) {
+          $paragraph = $paragraph_item['#paragraph'];
+
+          // Check each field in the paragraph.
+          foreach ($paragraph_fields_to_hide as $field_name) {
+            // Get the field definition.
+            $field_definition = $paragraph->getFieldDefinition($field_name);
+
+            // Check if the field definition exists and hide the field.
+            if ($field_definition !== NULL) {
+              // If found, hide the field by setting its render array to empty.
+              $paragraph_item[$field_name]['#access'] = FALSE;
+              $paragraph_item[$field_name]['#cache'] = [
+              // Disable caching for this field.
+                'max-age' => 0,
+              ];
+            }
+          }
+        }
+
+      }
+    }
+  }
+}
+
+/**
+ * Check if a course is enrolled.
+ */
+function dlp_check_course_enrolled($current_user, $node) {
+  // Check if the user is already enrolled (optional).
+  $uid = $current_user->id();
+  $nid = $node->id();
+  $connection = \Drupal::database();
+  $is_enrolled = $connection->select('course_enrollments', 'e')
+    ->fields('e')
+    ->condition('uid', $uid)
+    ->condition('nid', $nid)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+
+  return $is_enrolled;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function dlp_theme() {
+  return [
+    'student_dashboard_block' => [
+      'variables' => ['courses' => NULL],
+      'template' => 'student-dashboard-block',
+    ],
+    'student_courses_block' => [
+      'variables' => ['students' => NULL],
+      'template' => 'student-courses-block',
+    ],
+  ];
+}
+
+/**
+ * Finds the course node title that references a given lesson node.
+ *
+ * @param int $nid
+ *   The node ID (nid) of the lesson.
+ *
+ * @return string|null
+ *   The title of the first course node that references the given lesson nid, or
+ *
+ *   NULL if no match is found.
+ */
+function dlp_get_course_referencing_lesson($nid): string|null {
+  // Create an entity query to search for nodes of type 'course'
+  // that reference the given nid in the 'field_lesson_reference'.
+  $query = \Drupal::entityQuery('node')
+  // Only look for nodes of type 'course'.
+    ->condition('type', 'courses')
+  // Ensure the course is published.
+    ->condition('status', 1)
+  // Check the reference field.
+    ->condition('field_lesson_reference.target_id', $nid)
+    ->range(0, 1)
+  // Only return one result (first match)
+    ->accessCheck(TRUE);
+
+  // Execute the query and get the node ID.
+  $nids = $query->execute();
+
+  // If no course found, return NULL.
+  if (empty($nids)) {
+    return NULL;
+  }
+
+  // Load the first course node and return its title.
+  $node = Node::load(reset($nids));
+  return $node ? $node->getTitle() : NULL;
+}
+
+/**
+ * Fetches the progress data for a given user and course.
+ *
+ * @param int $nid
+ *   The course node ID.
+ *
+ * @return array|null
+ *   An array of progress data if it exists, or NULL if no record is found.
+ */
+function dlp_get_user_progress($nid) {
+  // Get the database connection.
+  $connection = Database::getConnection();
+  $uid = \Drupal::currentUser()->id();
+
+  try {
+    // Check if the progress record exists for the given user and course.
+    $existing_record = $connection->select('course_enrollments', 'ce')
+      ->fields('ce', ['progress'])
+      ->condition('uid', $uid)
+      ->condition('nid', $nid)
+      ->execute()
+      ->fetchAssoc();
+
+    // Return the progress data if the record exists.
+    if ($existing_record) {
+      return $existing_record['progress'];
+    }
+    else {
+      // No progress found for this user and course.
+      return NULL;
+    }
+  }
+  catch (\Exception $e) {
+    // Handle the exception, possibly log the error.
+    \Drupal::logger('dlp')->error($e->getMessage());
+    return NULL;
+  }
+}
+
+/**
+ * Save or update progress data for a user and lesson.
+ *
+ * @param int $uid
+ *   The user ID.
+ * @param int $nid
+ *   The lesson node ID.
+ * @param string $lesson_id
+ *   The lesson ID to save progress for.
+ *
+ * @return bool
+ *   TRUE on success, FALSE on failure.
+ */
+function dlp_save_or_update_progress($uid, $nid, $lesson_id) {
+  $connection = \Drupal::database();
+
+  // Check if a record exists.
+  $existing_record = $connection->select('course_enrollments', 'ce')
+    ->fields('ce', ['progress'])
+    ->condition('uid', $uid)
+    ->condition('nid', $nid)
+    ->execute()
+    ->fetchAssoc();
+
+  // If record exists, update progress.
+  if ($existing_record) {
+    $existing_progress = !empty($existing_record['progress']) ? json_decode($existing_record['progress'], TRUE) : [];
+
+    // Append new progress if it doesn't already exist.
+    if (!in_array($lesson_id, $existing_progress)) {
+      $existing_progress[] = $lesson_id;
+    }
+
+    // Update the progress field.
+    $connection->update('course_enrollments')
+      ->fields(['progress' => json_encode($existing_progress)])
+      ->condition('uid', $uid)
+      ->condition('nid', $nid)
+      ->execute();
+
+    // Updated successfully.
+    return TRUE;
+  }
+  else {
+    // If no record exists, insert a new row.
+    $connection->insert('course_enrollments')
+      ->fields([
+        'uid' => $uid,
+        'nid' => $nid,
+    // New progress data.
+        'progress' => json_encode([$lesson_id]),
+    // You might want to adjust this as needed.
+        'enrollment_date' => time(),
+      ])
+      ->execute();
+
+    // Inserted successfully.
+    return TRUE;
+  }
+
+  // Operation failed.
+  return FALSE;
+}
+
+/**
+ * Enroll a user in a course.
+ *
+ * @param int $nid
+ *   The node ID of the course.
+ *
+ * @return bool
+ *   TRUE if the enrollment was successful, FALSE otherwise.
+ */
+function dlp_enroll_user_in_course($nid) {
+  // Get the database connection.
+  $connection = Database::getConnection();
+  $uid = \Drupal::currentUser()->id();
+  try {
+    // Perform the enrollment logic (insert into database).
+    $result = $connection->insert('course_enrollments')
+      ->fields([
+        'uid' => $uid,
+        'nid' => $nid,
+        'enrollment_date' => \Drupal::time()->getRequestTime(),
+      ])
+      ->execute();
+
+    // Return TRUE if at least one record was inserted.
+    return $result > 0;
+  }
+  catch (\Exception $e) {
+    // Log the error.
+    \Drupal::logger('dlp')->error($e->getMessage());
+    // Return FALSE if an error occurred.
+    return FALSE;
+  }
+}
+
+/**
+ * Get the enrolled courses for the current user.
+ *
+ * @return \Drupal\Core\Database\ResultDecorator|null
+ *   The query result object, or NULL if no courses are found.
+ */
+function dlp_get_user_enrolled_courses() {
+  // Get the current user ID.
+  $uid = \Drupal::currentUser()->id();
+
+  // Get the database connection.
+  $connection = Database::getConnection();
+
+  // Fetch the enrolled courses for the current user.
+  $query = $connection->select('course_enrollments', 'ce')
+    ->fields('ce', ['nid', 'progress'])
+    ->condition('uid', $uid)
+    ->execute();
+
+  // Return the results indexed by node ID.
+  return $query;
+}
+
+/**
+ * Fetch active users with the 'student' role.
+ *
+ * @return array
+ *   An associative array of user data indexed by UID.
+ */
+function dlp_get_active_students() {
+  // Create a subquery to select UIDs of users who are enrolled in courses.
+  $enrolled_uids_query = Database::getConnection()->select('course_enrollments', 'ce')
+    ->fields('ce', ['uid'])
+  // Ensure unique UIDs.
+    ->distinct();
+
+  // Execute the subquery to get enrolled UIDs.
+  $enrolled_uids = $enrolled_uids_query->execute()->fetchCol();
+
+  // If no enrolled UIDs found, return an empty array.
+  if (empty($enrolled_uids)) {
+    return [];
+  }
+
+  // Create the query to select active users with the 'student' role.
+  $query = Database::getConnection()->select('users_field_data', 'u')
+    ->fields('u', ['uid', 'name'])
+  // Only active users.
+    ->condition('u.status', 1)
+  // Filter by enrolled UIDs.
+    ->condition('u.uid', $enrolled_uids, 'IN');
+
+  // Join user__roles table to filter by role.
+  $query->join('user__roles', 'ur', 'u.uid = ur.entity_id');
+
+  // Add condition for student role.
+  // 'student' is the role machine name.
+  $query->condition('ur.roles_target_id', 'student');
+
+  // Execute the query and fetch results.
+  $results = $query->execute()->fetchAllAssoc('uid');
+
+  // Return the results indexed by UID.
+  return $results;
+}
+
+/**
+ * Get all paragraph IDs attached to the node.
+ *
+ * @param \Drupal\node\Entity\Node $node
+ *   The node entity.
+ *
+ * @return array
+ *   An array of paragraph IDs.
+ */
+function dlp_get_paragraph_ids(Node $node) {
+  $paragraph_ids = [];
+  foreach ($node->get('field_add_lesson')->referencedEntities() as $paragraph) {
+    $paragraph_ids[] = $paragraph->id();
+  }
+  return $paragraph_ids;
+}

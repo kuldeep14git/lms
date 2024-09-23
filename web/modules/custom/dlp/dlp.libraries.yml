@@ -1,0 +1,7 @@
+enroll_library:
+  js:
+    js/enroll.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupal.once
