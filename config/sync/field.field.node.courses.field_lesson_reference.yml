@@ -1,0 +1,29 @@
+uuid: 7a4dc8d0-079d-4312-bea3-cdb0394941c5
+langcode: en-gb
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_lesson_reference
+    - node.type.courses
+    - node.type.lessons
+id: node.courses.field_lesson_reference
+field_name: field_lesson_reference
+entity_type: node
+bundle: courses
+label: 'Lesson Reference'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      lessons: lessons
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

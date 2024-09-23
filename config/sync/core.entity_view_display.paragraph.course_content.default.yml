@@ -1,0 +1,57 @@
+uuid: a28dd9e5-abda-4d3f-9411-8ae413aff663
+langcode: en-gb
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.course_content.field_description
+    - field.field.paragraph.course_content.field_image
+    - field.field.paragraph.course_content.field_title
+    - field.field.paragraph.course_content.field_video
+    - paragraphs.paragraphs_type.course_content
+  module:
+    - image
+    - text
+    - video_embed_field
+id: paragraph.course_content.default
+targetEntityType: paragraph
+bundle: course_content
+mode: default
+content:
+  field_description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_image:
+    type: image
+    label: hidden
+    settings:
+      image_link: ''
+      image_style: ''
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_title:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_video:
+    type: video_embed_field_video
+    label: hidden
+    settings:
+      autoplay: true
+      responsive: false
+      width: 400
+      height: 300
+    third_party_settings: {  }
+    weight: 3
+    region: content
+hidden: {  }

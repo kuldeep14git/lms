@@ -1,0 +1,12 @@
+uuid: 5aa5b94f-a823-403c-88ae-9bdcf09963bc
+langcode: en-gb
+status: true
+dependencies:
+  module:
+    - dlp
+id: student
+label: Student
+weight: 4
+is_admin: null
+permissions:
+  - 'enroll in course'

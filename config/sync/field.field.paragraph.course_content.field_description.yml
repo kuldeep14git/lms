@@ -1,0 +1,22 @@
+uuid: 7fad08a3-b716-4c20-a770-e706cc5c2983
+langcode: en-gb
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_description
+    - paragraphs.paragraphs_type.course_content
+  module:
+    - text
+id: paragraph.course_content.field_description
+field_name: field_description
+entity_type: paragraph
+bundle: course_content
+label: Description
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

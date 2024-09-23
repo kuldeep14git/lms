@@ -1,0 +1,20 @@
+uuid: 0cc652f8-28de-49fc-8e6b-a6f58d2ee56e
+langcode: en-gb
+status: true
+dependencies:
+  theme:
+    - lms
+_core:
+  default_config_hash: 6aOgWsNTXjqrDm98TXSAjP6qd2nCijD1xw45MrnbK-Y
+id: lms_page_title
+theme: lms
+region: content
+weight: -9
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'Page title'
+  label_display: '0'
+  provider: core
+visibility: {  }
