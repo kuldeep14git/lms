@@ -69,7 +69,7 @@ class StudentCoursesBlock extends BlockBase {
       $completed_count = count((array) $result->progress);
       $percentage_complete = $total_paragraphs ? ($completed_count / $total_paragraphs) * 100 : 0;
       $courses[] = [
-        'title' => get_course_referencing_lesson($result->nid),
+        'title' => dlp_get_course_referencing_lesson($result->nid),
         'progress' => $percentage_complete,
       ];
     }
