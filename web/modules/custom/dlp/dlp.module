@@ -56,7 +56,7 @@ function dlp_preprocess_node(&$variables) {
   }
 
   // Check if the user has the 'student' role and is not enrolled in the course.
-  if ($account->hasRole('student') && !dlp_check_course_enrolled($account, $node)) {
+  if ($account->hasRole('student') && !dlp_check_course_enrolled($account, $node) || $account->isAnonymous()) {
     // Define the fields to hide in paragraphs.
     $paragraph_fields_to_hide = ['field_description', 'field_image', 'field_video'];
 
