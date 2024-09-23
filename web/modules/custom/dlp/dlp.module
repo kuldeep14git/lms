@@ -244,22 +244,6 @@ function dlp_save_or_update_progress($uid, $nid, $lesson_id) {
     // Updated successfully.
     return TRUE;
   }
-  else {
-    // If no record exists, insert a new row.
-    $connection->insert('course_enrollments')
-      ->fields([
-        'uid' => $uid,
-        'nid' => $nid,
-    // New progress data.
-        'progress' => json_encode([$lesson_id]),
-    // You might want to adjust this as needed.
-        'enrollment_date' => time(),
-      ])
-      ->execute();
-
-    // Inserted successfully.
-    return TRUE;
-  }
 
   // Operation failed.
   return FALSE;
