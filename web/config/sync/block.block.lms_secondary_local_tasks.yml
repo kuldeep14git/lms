@@ -1,0 +1,22 @@
+uuid: d323f1c8-6bb6-4c42-996d-b161dce74e85
+langcode: en-gb
+status: true
+dependencies:
+  theme:
+    - lms
+_core:
+  default_config_hash: ydSxdq7R66I8UMC460rOzlfzvlUL4VRbdwc6z9DWaUI
+id: lms_secondary_local_tasks
+theme: lms
+region: header
+weight: -6
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'Secondary tabs'
+  label_display: '0'
+  provider: core
+  primary: false
+  secondary: true
+visibility: {  }

@@ -1,0 +1,22 @@
+uuid: ad44008e-8d5b-4894-a4fd-86137d83d16d
+langcode: en-gb
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - lms
+_core:
+  default_config_hash: VfPFqqxfkomud5CO8DUijw85QIl9GIxh_nIxLOYESxg
+id: lms_help
+theme: lms
+region: featured
+weight: -7
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  label_display: '0'
+  provider: help
+visibility: {  }
