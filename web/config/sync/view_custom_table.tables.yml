@@ -1,6 +1,0 @@
-course_enrollments:
-  table_name: course_enrollments
-  table_database: default
-  description: ''
-  column_relations: 'a:0:{}'
-  created_by: '1'
